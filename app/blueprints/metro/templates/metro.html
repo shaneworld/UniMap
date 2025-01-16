@@ -1,0 +1,75 @@
+{% extends "basic.html" %}
+
+{% block title %}
+  IMetro
+{% endblock %}
+
+{% block main %}
+
+  <!-- 城市选择控件 -->
+
+  <div class="d-flex align-items-start ms-5" style="margin-top: -40px">
+    <div class="dropdown" style="z-index: 999">
+      <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        选择城市
+      </button>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="#">北京</a></li>
+        <li><a class="dropdown-item" href="#">上海</a></li>
+        <li><a class="dropdown-item" href="#">南京</a></li>
+        <li><a class="dropdown-item" href="#">广州</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div id="subway-container"></div>
+
+{% endblock %}
+
+{% block script %}
+
+  <script type="text/javascript">
+
+    // 渲染地图对象
+    function render_subway_map(cityName) {
+      var list = BMapSub.SubwayCitiesList;
+      var subwaycity = null;
+      for (var i = 0; i < list.length; i++) {
+          if (list[i].name === cityName) {
+              subwaycity = list[i];
+              break;
+          }
+      }
+      var subway = new BMapSub.Subway('subway-container', subwaycity.citycode);
+      var zoomControl  = new BMapSub.ZoomControl({
+          anchor: BMAPSUB_ANCHOR_BOTTOM_RIGHT,
+          offset: new BMapSub.Size(10,100)
+      });
+      subway.addControl(zoomControl);
+      subway.setZoom(1);
+
+      subway.addEventListener('tap', function(e) {
+        var detail = new BMapSub.DetailInfo(subway);
+        detail.search(e.station.name);
+      });
+    }
+
+    // 初始化
+    render_subway_map('南京')
+
+    // 获取所有菜单项
+    const dropdownItems = document.querySelectorAll('.dropdown-item');
+
+    // 为每个菜单项添加点击事件监听器
+    dropdownItems.forEach(item => {
+      item.addEventListener('click', function (event) {
+        // 获取点击菜单项的文字内容
+        var subwaycity = null;
+        const selectedCity = event.target.textContent;
+        render_subway_map(selectedCity);
+      });
+    });
+
+  </script>
+
+{% endblock %}

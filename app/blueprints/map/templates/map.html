@@ -1,70 +1,18 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />  
-<style>
-  body,
-  html {
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-  }
+{% extends "basic.html" %}
 
-  #l-map {
-    position: absolute;
-    bottom: 0;
-    height: 100%;
-    width:100%;
-  }
+{% block title %}
+  IMap
+{% endblock %}
 
-  .anchorBL {
-   display: none;
-  }
+{% block main %}
 
-  #floating-panel {
-      position: fixed;
-      top: 100px;
-      left: 20px;
-      background-color: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      z-index: 999;
-      width: 300px;
-  }
-
-  footer {
-    position: absolute;
-    bottom: 10px;
-    left: 0;
-    width: 100%;
-    text-align: center;
-    padding: 10px;
-    z-index: 9999; /* Ensure footer is on top of the map */
-  }
-
-</style>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-<script type="text/javascript" src="https://api.map.baidu.com/api?v=3.0&&type=webgl&ak={{constants.API_KEY}}">
-</script>
-<body>
+  
   <!-- 导航栏 -->
-  <div class="container d-flex justify-content-center mt-4">
-    <ul class="nav nav-pills nav-fill" style="z-index: 999;">
-      <li class="nav-item">
-        <a class="nav-link active" aria-current="page" href="#">{{constants.SCHOOL_MAP}}</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#view" aria-controls="offcanvasWithBothOptions">{{constants.VIEW_MARKERS}}</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#add" aria-controls="offcanvasWithBothOptions">{{constants.ADD_COORDINATES}}</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#about" aria-controls="offcanvasWithBothOptions">{{constants.ABOUT_SCHOOL}}</a>
-      </li>
-    </ul>
+  <div class="d-grid col-1">
+    <div style="z-index: 999; margin-top: 100px" class="d-flex flex-column align-items-start ms-5 gap-3">
+      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add" aria-controls="offcanvasWithBothOptions">{{constants.ADD_COORDINATES}}</button>
+      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#view" aria-controls="offcanvasWithBothOptions">{{constants.VIEW_MARKERS}}</button>
+    </div>
   </div>
 
   <!-- 添加坐标模态框 -->
@@ -145,135 +93,166 @@
     </div>
   </div>
 
-  <!-- 关于河海模态框 -->
-  <div class="modal fade" id="about" tabindex="-1" aria-labelledby="aboutModal" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content">
-        <!-- 模态框头部 -->
-        <div class="modal-header">
-          <h5 class="modal-title" id="add-coordinate-card">{{constants.ABOUT_SCHOOL}}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <!-- 模态框主体内容 -->
-        <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
-          <img src="{{ url_for('map.static', filename='hohai.jpg') }}" class="img-fluid" style="z-index: 1000;" alt="河海大学">
-          <div class="mt-3">
-              <pre style="white-space: pre-wrap; word-wrap: break-word;">{{constants.ABOUT_HOHAI | safe}}</pre>
-          </div>
-        </div>
+  <div class = "info">
+      <div class="selbox">
+          <span>选择省份</span>
+          <select name="sel-list" id="prolist" onchange="changeProvince(this)">
+              <option value="-1">选择省份</option>
+          </select>
       </div>
-    </div>
+      <div class="selbox">
+          <span>选择层级</span>
+          <select name="sel-list" onchange="changeDepth(this)">
+              <option value="0">省级行政区-0</option>
+              <option selected value="1">市级行政区-1</option>
+              <option value="2">区/县级行政区-2</option>
+          </select>
+      </div>
   </div>
-
-  <!-- 页脚 -->
-  <footer>
-    <div class="container d-flex justify-content-center" style="z-index: 999;">
-      <span>{{constants.FOOTER}}</span>
-    </div>
-  </footer>
 
   <!-- 地图 -->
   <div id="l-map"></div> 
 
-</body>
-<script>
 
-  // 全局变量记录插入的jsonp标签
-  window.clickPoint = null;
-  window.script = null;
-  window.sucess = function(res) {		
-      console.log(res);
-      if (res.uii_err === 0 && res.content) {
-          var info = res.content;
-          var sContent = `<h4 style='margin:0 0 5px 10px;'>${info.name}</h4>
-              <h5 style='margin:0 0 5px 10px;'>地址：${info.addr}</h4>
-              <h5 style='margin:0 0 35px 10px;'>分类：${info.tag !== '境外区域' || info.tag === info.name? info.tag : '地址'}</h4>`;
-          var infoWindow = new BMapGL.InfoWindow(sContent);  // 创建信息窗口对象 
-          map.openInfoWindow(infoWindow, clickPoint); //开启信息窗口
-          // 移除插入的标签，防止越插入越多
-          document.getElementsByTagName('head')[0].removeChild(script);
+  {% block script %}
+    <script>
+
+      // 全局变量记录插入的jsonp标签
+      window.clickPoint = null;
+      window.script = null;
+      window.sucess = function(res) {		
+          console.log(res);
+          if (res.uii_err === 0 && res.content) {
+              var info = res.content;
+              var sContent = `<h4 style='margin:0 0 5px 10px;'>${info.name}</h4>
+                  <h5 style='margin:0 0 5px 10px;'>地址：${info.addr}</h4>
+                  <h5 style='margin:0 0 35px 10px;'>分类：${info.tag !== '境外区域' || info.tag === info.name? info.tag : '地址'}</h4>`;
+              var infoWindow = new BMapGL.InfoWindow(sContent);  // 创建信息窗口对象 
+              map.openInfoWindow(infoWindow, clickPoint); //开启信息窗口
+              // 移除插入的标签，防止越插入越多
+              document.getElementsByTagName('head')[0].removeChild(script);
+          }
       }
-  }
 
-  // 创建地图
-  var map = new BMapGL.Map("l-map", {enableIconClick: true});
-  var point = new BMapGL.Point(118.792377,31.919875);
-  map.centerAndZoom(point, 19); 
+      // 创建地图
+      var map = new BMapGL.Map("l-map", {enableIconClick: true});
+      var point = new BMapGL.Point(104.747198,34.278766);
+      map.centerAndZoom(point, 12); 
 
-  // 添加自定义地图样式
-  map.setMapStyleV2({     
-    styleId: '9875bd0803e91fcaa1e80f41386813c4'
-  });
+      // 添加自定义地图样式
+      map.setMapStyleV2({     
+        styleId: '9875bd0803e91fcaa1e80f41386813c4'
+      });
 
-  //开启鼠标滚轮缩放
-  map.enableScrollWheelZoom(true);
+      //开启鼠标滚轮缩放
+      map.enableScrollWheelZoom(true);
 
-  // 控件
-  var scaleCtrl = new BMapGL.ScaleControl(); // 比例尺控件
-  var zoomCtrl = new BMapGL.ZoomControl(); // 缩放控件
-  var navi3DCtrl = new BMapGL.NavigationControl3D({ // 3D控件
-      offset: new BMapGL.Size(40, 110)
-  });
-  var cityControl = new BMapGL.CityListControl({ // 城市选择控件
-      anchor: BMAP_ANCHOR_TOP_LEFT,
-      offset: new BMapGL.Size(40, 30)
-  });
-  var locationControl = new BMapGL.LocationControl({ // 定位控件
-      anchor: BMAP_ANCHOR_TOP_RIGHT,
-      offset: new BMapGL.Size(45, 40)
-  });
+      // 控件
+      var scaleCtrl = new BMapGL.ScaleControl(); // 比例尺控件
+      var zoomCtrl = new BMapGL.ZoomControl(); // 缩放控件
+      var navi3DCtrl = new BMapGL.NavigationControl3D({ // 3D控件
+          offset: new BMapGL.Size(40, 110)
+      });
+      var locationControl = new BMapGL.LocationControl({ // 定位控件
+          anchor: BMAP_ANCHOR_TOP_RIGHT,
+          offset: new BMapGL.Size(45, 40)
+      });
 
-  // 将控件添加到地图上
-  map.addControl(scaleCtrl);
-  map.addControl(zoomCtrl);
-  map.addControl(navi3DCtrl);
-  map.addControl(cityControl);
-  map.addControl(locationControl);
+      // 将控件添加到地图上
+      map.addControl(scaleCtrl);
+      map.addControl(zoomCtrl);
+      map.addControl(navi3DCtrl);
+      map.addControl(locationControl);
 
-  // 设置视角
-  map.setHeading(20);
-  // 设置地图的倾斜角度为 45 度
-  map.setTilt(60);
+      //// 设置视角
+      //map.setHeading(20);
+      //// 设置地图的倾斜角度为 45 度
+      //map.setTilt(60);
 
-  map.addEventListener('click', e => {
-      clickPoint = e.latlng;
-      const point = e.point;
-      const itemId = map.getIconByClickPosition(e);
-      if (itemId) {
-        let url = "//api.map.baidu.com/?qt=inf&uid="+itemId.uid+'&operate=mapclick&clicktype=tile&ie=utf-8&oue=1&fromproduct=jsapi&res=api&&ak={{constants.API_KEY}}&callback=sucess'
-          script = document.createElement('script');
-          script.setAttribute('src', url);
-          document.getElementsByTagName('head')[0].appendChild(script); 
+      map.addEventListener('click', e => {
+          clickPoint = e.latlng;
+          const point = e.point;
+          const itemId = map.getIconByClickPosition(e);
+          if (itemId) {
+            let url = "//api.map.baidu.com/?qt=inf&uid="+itemId.uid+'&operate=mapclick&clicktype=tile&ie=utf-8&oue=1&fromproduct=jsapi&res=api&&ak={{constants.API_KEY}}&callback=sucess'
+              script = document.createElement('script');
+              script.setAttribute('src', url);
+              document.getElementsByTagName('head')[0].appendChild(script); 
+          }
+      });
+
+      var proname = '江苏省';
+      var prokind = 1;
+      var dist = null;
+
+      // --- 添加行政区 ---
+      function addDis(proname, prokind) {
+          map.removeDistrictLayer(dist);
+          dist = new BMapGL.DistrictLayer({
+              name: '(' + proname + ')',
+              kind: prokind,
+              fillColor: '#618bf8',
+              strokeColor: '#daeafa',
+              viewport: true
+          });
+          map.addDistrictLayer(dist);
       }
-  });
+      addDis(proname, prokind);
 
+      // --- 切换行政区与层级 ---
+      function changeProvince(ele) {
+          proname = ele.value;
+          addDis(ele.value, prokind);
+      }
 
-  // 坐标
-  {% for location in locations %}
-    var lng = {{ location.lng }};
-    var lat = {{ location.lat }};
-    var address = "{{ location.address }}";
-    var tag = "{{ location.tag }}";
+      function changeDepth(ele) {
+          prokind = ele.value;
+          addDis(proname, ele.value);
+      }
 
-    var point = new BMapGL.Point(lng, lat);
-    var marker = new BMapGL.Marker(point);
-    map.addOverlay(marker);
+      // --- 行政区划添加鼠标事件 ---
+      dist.addEventListener('mouseover', function (e) {
+          e.currentTarget.setFillColor('#9169db');
+      });
+      dist.addEventListener('mouseout', function (e) {
+          e.currentTarget.setFillColor(e.currentTarget.style.fillColor);
+      });
 
-    // 信息窗口
-    var opts = {
-        width: 200,
-        height: 100,
-        title: tag
-    };
+      // 坐标
+      {% for location in locations %}
+        var lng = {{ location.lng }};
+        var lat = {{ location.lat }};
+        var address = "{{ location.address }}";
+        var tag = "{{ location.tag }}";
 
-    // 使用闭包确保每个标记的点击事件都有自己的信息
-    (function(marker, point, address, lng, lat) {
-        var infoWindow = new BMapGL.InfoWindow('{{constants.ADDRESS}}：' + address + '<br/>{{constants.LNG}}：' + lng + '<br/>{{constants.LAT}}：' + lat, opts);
-        marker.addEventListener('click', function () {
-            map.openInfoWindow(infoWindow, point);
-        });
-    })(marker, point, address, lng, lat);
-  {% endfor %}
+        var point = new BMapGL.Point(lng, lat);
+        var marker = new BMapGL.Marker(point);
+        map.addOverlay(marker);
 
-</script>
-</html>
+        // 信息窗口
+        var opts = {
+            width: 200,
+            height: 100,
+            title: tag
+        };
+
+        // 使用闭包确保每个标记的点击事件都有自己的信息
+        (function(marker, point, address, lng, lat) {
+            var infoWindow = new BMapGL.InfoWindow('{{constants.ADDRESS}}：' + address + '<br/>{{constants.LNG}}：' + lng + '<br/>{{constants.LAT}}：' + lat, opts);
+            marker.addEventListener('click', function () {
+                map.openInfoWindow(infoWindow, point);
+            });
+        })(marker, point, address, lng, lat);
+      {% endfor %}
+
+    </script>
+    <script>
+      var optarr = provinces.map(function (item) {
+        return '<option ' + (item.name === proname ? 'selected' : '') + ' value="' + item.name + '">' + item.name + '</option>';
+      });
+      document.getElementById('prolist').innerHTML = optarr.join('');
+    </script>
+
+  {% endblock %}
+
+{% endblock %}

@@ -1,5 +1,4 @@
 flask
 flask_sqlalchemy
-requests
 flask_wtf
 flask-migrate

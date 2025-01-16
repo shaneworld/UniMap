@@ -10,7 +10,7 @@ migrate = Migrate()
 
 def create_app(config_class=Config):
 
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder='templates')
 
     # 设置日志
     app.logger.setLevel(logging.DEBUG)
@@ -28,6 +28,8 @@ def create_app(config_class=Config):
 
     # Register blueprints
     from app.blueprints.map import bp_map
+    from app.blueprints.metro import bp_metro
     app.register_blueprint(bp_map)
+    app.register_blueprint(bp_metro)
 
     return app
