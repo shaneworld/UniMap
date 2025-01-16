@@ -1,6 +1,6 @@
 API_KEY = "dzw7np03ExpODqYQjNbI59jE7z8HSXYp"
 FOOTER = "版权所有 © 2025 朱希涵 保留所有权利"
-SCHOOL_MAP = "校园地图"
+SCHOOL_MAP = "地图"
 VIEW_MARKERS = "地点一览"
 ADD_COORDINATES = "添加坐标"
 ABOUT_SCHOOL = "关于河海"
