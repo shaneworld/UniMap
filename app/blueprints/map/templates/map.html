@@ -6,12 +6,20 @@
 
 {% block main %}
 
-  
   <!-- 导航栏 -->
-  <div class="d-grid col-1">
-    <div style="z-index: 999; margin-top: 100px" class="d-flex flex-column align-items-start ms-5 gap-3">
-      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add" aria-controls="offcanvasWithBothOptions">{{constants.ADD_COORDINATES}}</button>
-      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#view" aria-controls="offcanvasWithBothOptions">{{constants.VIEW_MARKERS}}</button>
+  <div class="d-grid">
+    <div id="keywordSearch" style="z-index: 999; margin-top: 80px" class="d-flex align-items-start ms-3" role="search">
+      <input class="form-control me-2" type="text" id="searchInput" size="20" placeholder="搜索" style="z-index: 999;">
+    </div>
+
+    <div style="z-index: 999; margin-top: 20px" class="d-flex flex-row align-items-start ms-3 gap-3">
+      <button type="button" class="btn btn-primary" style="width: 6%;" data-bs-toggle="modal" data-bs-target="#add" aria-controls="offcanvasWithBothOptions">{{constants.ADD_COORDINATES}}</button>
+      <button type="button" class="btn btn-primary" style="width: 6%;" data-bs-toggle="modal" data-bs-target="#view" aria-controls="offcanvasWithBothOptions">{{constants.VIEW_MARKERS}}</button>
+    </div>
+
+    <div class="form-check form-switch d-flex align-items-start ms-3 gap-3" style="z-index: 999; margin-top: 20px">
+      <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
+      <label class="form-check-label" for="flexSwitchCheckChecked">{{constants.DIVISIONS}}</label>
     </div>
   </div>
 
@@ -113,9 +121,12 @@
   <!-- 地图 -->
   <div id="l-map"></div> 
 
-
   {% block script %}
     <script>
+
+      function G(id) {
+        return document.getElementById(id);
+      }
 
       // 全局变量记录插入的jsonp标签
       window.clickPoint = null;
@@ -164,11 +175,6 @@
       map.addControl(navi3DCtrl);
       map.addControl(locationControl);
 
-      //// 设置视角
-      //map.setHeading(20);
-      //// 设置地图的倾斜角度为 45 度
-      //map.setTilt(60);
-
       map.addEventListener('click', e => {
           clickPoint = e.latlng;
           const point = e.point;
@@ -179,6 +185,20 @@
               script.setAttribute('src', url);
               document.getElementsByTagName('head')[0].appendChild(script); 
           }
+      });
+
+      map.addEventListener('rightclick', e => {
+        // 获取点击位置的经纬度
+        const lng = e.latlng.lng;
+        const lat = e.latlng.lat;
+
+        // 设置模态框中的输入框值
+        document.querySelector('#lng').value = lng;
+        document.querySelector('#lat').value = lat;
+
+        // 打开模态框
+        const modal = new bootstrap.Modal(G('add'));
+        modal.show();
       });
 
       var proname = '江苏省';
@@ -218,6 +238,21 @@
           e.currentTarget.setFillColor(e.currentTarget.style.fillColor);
       });
 
+      // 获取 checkbox 元素
+      const checkbox = G('flexSwitchCheckChecked');
+      // 监听 checkbox 的变化
+      checkbox.addEventListener('change', function() {
+        if (checkbox.checked) {
+          map.addDistrictLayer(dist);
+        } else {
+          removeLabels()
+        }
+      });
+
+      function removeLabels() {
+        map.removeDistrictLayer(dist);
+      }
+
       // 坐标
       {% for location in locations %}
         var lng = {{ location.lng }};
@@ -245,12 +280,27 @@
         })(marker, point, address, lng, lat);
       {% endfor %}
 
-    </script>
-    <script>
+      // 检索服务 
+      // 获取输入框元素
+      const searchInput = G('searchInput');
+      // 为输入框添加回车键事件监听
+      searchInput.addEventListener('keydown', function(event) {
+        // 判断是否按下回车键
+        if (event.key === 'Enter') {
+          // 获取输入框中的内容
+          const searchText = searchInput.value;
+          var local = new BMapGL.LocalSearch(map, {
+            renderOptions:{map: map, autoViewport: true}
+          });
+          // BUG: 容易出现无法检索到的错误情况
+          local.search(searchText);
+        }
+      });
+
       var optarr = provinces.map(function (item) {
         return '<option ' + (item.name === proname ? 'selected' : '') + ' value="' + item.name + '">' + item.name + '</option>';
       });
-      document.getElementById('prolist').innerHTML = optarr.join('');
+      G('prolist').innerHTML = optarr.join('');
     </script>
 
   {% endblock %}

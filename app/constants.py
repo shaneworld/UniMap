@@ -1,6 +1,8 @@
 API_KEY = "dzw7np03ExpODqYQjNbI59jE7z8HSXYp"
+# API_KEY = "P7s9CFWcuuCDyJbbFwukHKyRiPGGdmUl"
 FOOTER = "版权所有 © 2025 朱希涵 保留所有权利"
-SCHOOL_MAP = "地图"
+MAP = "地图"
+METRO = "地铁"
 VIEW_MARKERS = "地点一览"
 ADD_COORDINATES = "添加坐标"
 ABOUT_SCHOOL = "关于河海"
@@ -10,6 +12,20 @@ TAG = "标签"
 ADDRESS = "地址"
 NUM = "序号"
 DELETE = "删除"
+DIVISIONS = "行政区划"
+CHOOSE_CITY = "选择城市"
+CITIES = [
+   "北京",
+   "上海",
+   "广州",
+   "深圳",
+   "南京",
+   "重庆",
+   "成都"
+]
+HINT_START = "请输入起点"
+HINT_END = "请输入终点"
+BTN_CHECK = "查询"
 ABOUT_HOHAI = """
    河海大学是一所拥有110年办学历史，以水利为特色，工科为主，多学科协调发展的教育部直属全国重点大学，是国家“双一流”建设、“211工程”重点建设、“985工程优势学科创新平台”建设以及经国家批准设立研究生院的高校。百余年来，学校在治水兴邦的奋斗历程中发展壮大，被誉为“水利高层次创新创业人才培养的摇篮和水利科技创新的重要基地”。学校在南京市、常州市设有西康路校区、江宁校区和常州校区。
 

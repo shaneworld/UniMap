@@ -19,14 +19,14 @@ def create_app(config_class=Config):
     console_handler.setFormatter(formatter)
     app.logger.addHandler(console_handler)
 
-    # load configuration
+    # 加载配置
     app.config.from_object(config_class)
 
     # 创建数据库连接
     db.init_app(app)
     migrate.init_app(app, db)
 
-    # Register blueprints
+    # 注册蓝图
     from app.blueprints.map import bp_map
     from app.blueprints.metro import bp_metro
     app.register_blueprint(bp_map)
